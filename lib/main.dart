@@ -176,16 +176,12 @@ class _MyWidgetState extends flFramework.State<MyWidget> {
   Future<void> example2() async {
 
     printC('\nExample 2 create a JWS');
-
     // create a builder
     var builder = JsonWebSignatureBuilder();
-
     // set the content
     builder.stringContent = 'It is me';
-
     // set some protected header
     builder.setProtectedHeader('createdAt', DateTime.now().toIso8601String());
-
     // add a key to sign, you can add multiple keys for different recipients
     builder.addRecipient(
         JsonWebKey.fromJson({
@@ -194,15 +190,14 @@ class _MyWidgetState extends flFramework.State<MyWidget> {
           'AyM1SysPpbyDfgZld3umj1qzKObwVMkoqQ-EstJQLr_T-1qS0gZH75aKtMN3Yj0iPS4hcgUuTwjAzZr1Z9CAow'
         }),
         algorithm: 'HS256');
-
     // build the jws
     var jws = builder.build();
-
     // output the compact serialization
     printC('jws compact serialization: ${jws.toCompactSerialization()}');
-
     // output the json serialization
     printC('jws json serialization: ${jws.toJson()}');
+    printC('jws json commonHeader serialization: ${jws.commonHeader.toJson()}');
+    printC('jws json commonProtectedHeader serialization: ${jws.commonProtectedHeader.toJson()}');
   }
 
 // decode and decrypt a JWE
@@ -272,13 +267,10 @@ class _MyWidgetState extends flFramework.State<MyWidget> {
 
     // create a builder
     var builder = JsonWebEncryptionBuilder();
-
     // set the content
     builder.stringContent = 'This is my bigest secret';
-
     // set some protected header
     builder.setProtectedHeader('createdAt', DateTime.now().toIso8601String());
-
     // add a key to encrypt the Content Encryption Key
     var jwk = JsonWebKey.fromJson(
       {
@@ -314,37 +306,28 @@ class _MyWidgetState extends flFramework.State<MyWidget> {
       },
     );
     builder.addRecipient(jwk, algorithm: 'RSA1_5');
-
     // set the content encryption algorithm to use
     builder.encryptionAlgorithm = 'A128CBC-HS256';
-
     // build the jws
     var jwe = builder.build();
-
     // output the compact serialization
     printC('jwe compact serialization: ${jwe.toCompactSerialization()}');
-
     // output the json serialization
     printC('jwe json serialization: ${jwe.toJson()}');
   }
 
 // decode and verify and validate a JWT
   Future<void> example5() async {
-
     printC('\nExample 5 decode and verify a JWT');
-
     var encoded = 'eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9.'
         'eyJpc3MiOiJqb2UiLA0KICJleHAiOjEzMDA4MTkzODAsDQogImh0dHA6Ly9leGFt'
         'cGxlLmNvbS9pc19yb290Ijp0cnVlfQ.'
         'dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk';
-
     // decode the jwt, note: this constructor can only be used for JWT inside JWS
     // structures
     var jwt = JsonWebToken.unverified(encoded);
-
     // output the claims
     printC('claims: ${jwt.claims}');
-
     // create key store to verify the signature
     var keyStore = JsonWebKeyStore()
       ..addKey(JsonWebKey.fromJson({
@@ -352,14 +335,11 @@ class _MyWidgetState extends flFramework.State<MyWidget> {
         'k':
         'AyM1SysPpbyDfgZld3umj1qzKObwVMkoqQ-EstJQLr_T-1qS0gZH75aKtMN3Yj0iPS4hcgUuTwjAzZr1Z9CAow'
       }));
-
     var verified = await jwt.verify(keyStore);
     printC('verified: $verified');
-
     // alternatively, create and verify the JsonWebToken together, this is also
     // applicable for JWT inside JWE
     jwt = await JsonWebToken.decodeAndVerify(encoded, keyStore);
-
     // validate the claims
     var violations = jwt.claims.validate(issuer: Uri.parse('alice'));
     printC('violations: $violations');
@@ -375,15 +355,12 @@ class _MyWidgetState extends flFramework.State<MyWidget> {
       DateTime.now().add(Duration(hours: 4)).millisecondsSinceEpoch ~/ 1000,
       'iss': 'alice',
     });
-
     // create a builder, decoding the JWT in a JWS, so using a
     // JsonWebSignatureBuilder
     var builder = JsonWebSignatureBuilder();
     builder.setProtectedHeader('typ', 'JWT');
-
     // set the content
     builder.jsonContent = claims.toJson();
-
     // add a key to sign, can only add one for JWT
     builder.addRecipient(
         JsonWebKey.fromJson({
@@ -391,10 +368,8 @@ class _MyWidgetState extends flFramework.State<MyWidget> {
           'k': base64Urlencode(' ** my secret ** '),
         }),
         algorithm: 'HS256');
-
     // build the jws
     var jws = builder.build();
-
     // output the compact serialization
     printC('jwt compact serialization: ${jws.toCompactSerialization()}');
   }
@@ -408,30 +383,23 @@ class _MyWidgetState extends flFramework.State<MyWidget> {
   Future<void> example7() async {
 
     printC('\nExample 7 create a JWT, sign with RS512');
-
     var claims = JsonWebTokenClaims.fromJson({
       'exp':
       DateTime.now().add(Duration(hours: 4)).millisecondsSinceEpoch ~/ 1000,
       'iss': 'alice',
     });
-
     // create a builder, decoding the JWT in a JWS, so using a
     // JsonWebSignatureBuilder
     var builder = JsonWebSignatureBuilder();
     builder.setProtectedHeader('typ', 'JWT');
-
     // set the content
     builder.jsonContent = claims.toJson();
-
     // add a key to sign, can only add one for JWT
     //var key = JsonWebKey.fromPem(File('example/jwtRS512.key').readAsStringSync());
     var key = JsonWebKey.fromPem(getJwtRS512PrivateKey());
-
     builder.addRecipient(key, algorithm: 'RS512');
-
     // build the jws
     var jws = builder.build();
-
     // output the compact serialization
     printC('jwt compact serialization: ${jws.toCompactSerialization()}');
   }
